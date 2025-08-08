@@ -1,5 +1,8 @@
 # VitalCare
 VitalCare est une plateforme de santé mobile conçue pour la gestion de l'hypertension artérielle (HTA), du diabète et de la drépanocytose. Elle connecte patients et professionnels via l'IA pour un suivi personnalisé et des analyses prédictives. Développée pour Android et iOS, elle optimise la prise en charge médicale et l'autonomie des patients.
+
+---
+
 ### Fonctionnalités clés
 
 * **Suivi en temps réel** des paramètres vitaux (tension, glycémie).
@@ -29,7 +32,7 @@ Assurez-vous d'avoir installé le **Flutter SDK** et un éditeur de code tel que
 #### 2. Configuration du projet
 
 1.  Clonez ce dépôt Git sur votre machine :
-    `git clone [https://github.com/batokasamuel-lgtm/VitalCare/edit/main/README.md ]`
+    `git clone [https://github.com/batokasamuel-lgtm/VitalCare.git]`
 
 2.  Naviguez jusqu'au dossier du projet :
     `cd vitalcare`
