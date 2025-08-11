@@ -18,6 +18,7 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+        working-directory: VitalCare
 
       - name: Decode Keystore
         env:
@@ -27,6 +28,7 @@ jobs:
             mkdir -p android/app
             echo "$KEYSTORE_BASE64" | base64 --decode > android/app/my-release-key.keystore
           fi
+        working-directory: VitalCare
 
       - name: Create Keystore Properties
         env:
@@ -38,15 +40,18 @@ jobs:
           echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
           echo "keyAlias=$KEY_ALIAS" >> android/key.properties
           echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+        working-directory: VitalCare
 
       - name: Build Signed APK
         run: flutter build apk --release
+        working-directory: VitalCare
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release.apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          working-directory: VitalCare
 
   build-web:
     runs-on: ubuntu-latest
@@ -60,10 +65,14 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+        working-directory: VitalCare
       - name: Build web
         run: flutter build web --release
+        working-directory: VitalCare
       - name: Upload web build
         uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: build/web
+          working-directory: VitalCare
+        
