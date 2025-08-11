@@ -11,11 +11,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
+
       - name: Install dependencies
         run: flutter pub get
         working-directory: VitalCare
@@ -24,10 +26,8 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            mkdir -p android/app
-            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/my-release-key.keystore
-          fi
+          mkdir -p android/app
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/my-release-key.keystore
         working-directory: VitalCare
 
       - name: Create Keystore Properties
@@ -50,29 +50,30 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release.apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          working-directory: VitalCare
+          path: VitalCare/build/app/outputs/flutter-apk/app-release.apk
 
   build-web:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
+
       - name: Install dependencies
         run: flutter pub get
         working-directory: VitalCare
+
       - name: Build web
         run: flutter build web --release
         working-directory: VitalCare
+
       - name: Upload web build
         uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: build/web
-          working-directory: VitalCare
-        
+          path: VitalCare/build/web
