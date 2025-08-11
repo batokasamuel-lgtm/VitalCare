@@ -1,4 +1,4 @@
-name: Flutter CI - build APK and web
+name: Flutter CI - Build & Release APK, AAB and Web
 
 on:
   push:
@@ -6,21 +6,37 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-android:
+  build-and-release:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      # 1. Récupérer le code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Installer Flutter stable
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
+      # 3. Cache packages
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            build
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      # 4. Installer les dépendances
       - name: Install dependencies
         run: flutter pub get
 
+      # 5. Décode le keystore si présent
       - name: Decode Keystore
         if: env.KEYSTORE_BASE64 != ''
         env:
@@ -29,6 +45,7 @@ jobs:
           mkdir -p android/app
           echo "$KEYSTORE_BASE64" | base64 --decode > android/app/my-release-key.keystore
 
+      # 6. Créer le fichier key.properties
       - name: Create key.properties
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -40,34 +57,35 @@ jobs:
           echo "keyAlias=$KEY_ALIAS" >> android/key.properties
           echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
 
-      - name: Build Signed APK
+      # 7. Build APK release
+      - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release.apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+      # 8. Build AAB release
+      - name: Build App Bundle (AAB)
+        run: flutter build appbundle --release
 
-  build-web:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build web
+      # 9. Build Web release
+      - name: Build Web
         run: flutter build web --release
 
-      - name: Upload web build
+      # 10. Créer une Release GitHub
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "Build ${{ github.run_number }} - $(date +'%Y-%m-%d')"
+          draft: false
+          prerelease: false
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 11. Upload Web build en artifact (optionnel mais pratique)
+      - name: Upload Web build
         uses: actions/upload-artifact@v4
         with:
           name: web-build
