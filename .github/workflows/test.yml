@@ -1,4 +1,4 @@
-name: Flutter CI - run tests
+name: Flutter CI - run tests and analyze
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  test_and_analyze:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -23,6 +23,11 @@ jobs:
         run: flutter pub get
         working-directory: VitalCare
 
+      - name: Analyze code
+        run: flutter analyze
+        working-directory: VitalCare
+
       - name: Run tests
         run: flutter test
         working-directory: VitalCare
+
