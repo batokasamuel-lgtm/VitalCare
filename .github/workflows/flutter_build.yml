@@ -1,4 +1,4 @@
-name: Flutter CI - Build & Release APK, AAB and Web
+name: Flutter CI - build APK and web
 
 on:
   push:
@@ -6,87 +6,74 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-release:
+  build-android:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Récupérer le code
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Installer Flutter stable
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      # 3. Cache packages
-      - name: Cache pub packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            build
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-
-      # 4. Installer les dépendances
       - name: Install dependencies
         run: flutter pub get
+        working-directory: VitalCare
 
-      # 5. Décode le keystore si présent
       - name: Decode Keystore
-        if: env.KEYSTORE_BASE64 != ''
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          mkdir -p android/app
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/my-release-key.keystore
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            mkdir -p VitalCare/android/app
+            echo "$KEYSTORE_BASE64" | base64 --decode > VitalCare/android/app/my-release-key.keystore
+          fi
 
-      # 6. Créer le fichier key.properties
-      - name: Create key.properties
+      - name: Create Keystore Properties
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "storeFile=my-release-key.keystore" > android/key.properties
-          echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
-          echo "keyAlias=$KEY_ALIAS" >> android/key.properties
-          echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+          echo "storeFile=my-release-key.keystore" > VitalCare/android/key.properties
+          echo "storePassword=$KEYSTORE_PASSWORD" >> VitalCare/android/key.properties
+          echo "keyAlias=$KEY_ALIAS" >> VitalCare/android/key.properties
+          echo "keyPassword=$KEY_PASSWORD" >> VitalCare/android/key.properties
 
-      # 7. Build APK release
-      - name: Build APK
+      - name: Build Signed APK
         run: flutter build apk --release
+        working-directory: VitalCare
 
-      # 8. Build AAB release
-      - name: Build App Bundle (AAB)
-        run: flutter build appbundle --release
-
-      # 9. Build Web release
-      - name: Build Web
-        run: flutter build web --release
-
-      # 10. Créer une Release GitHub
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: build-${{ github.run_number }}
-          name: "Build ${{ github.run_number }} - $(date +'%Y-%m-%d')"
-          draft: false
-          prerelease: false
-          files: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: app-release.apk
+          path: VitalCare/build/app/outputs/flutter-apk/app-release.apk
 
-      # 11. Upload Web build en artifact (optionnel mais pratique)
-      - name: Upload Web build
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: VitalCare
+
+      - name: Build web
+        run: flutter build web --release
+        working-directory: VitalCare
+
+      - name: Upload web build
         uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: build/web
+          path: VitalCare/build/web

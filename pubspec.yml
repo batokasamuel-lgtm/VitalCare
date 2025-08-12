@@ -1,0 +1,32 @@
+name: vitalcare
+description: Application mobile VitalCare - Santé
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.5
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.18.0
+  firebase_core: ^2.15.1
+  firebase_auth: ^4.7.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/lang/
